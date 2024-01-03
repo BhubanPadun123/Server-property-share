@@ -1,0 +1,20 @@
+{
+  "name": "roomRent",
+  "version": "1.0.0",
+  "main": "index.mjs",
+  "author": "Bhuban padun",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "joi": "^17.11.0",
+    "mongoose": "^8.0.3",
+    "nodemailer": "^6.9.8"
+  },
+  "type": "module",
+  "scripts": {
+    "start": "nodemon index.mjs"
+  }
+}
