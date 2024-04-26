@@ -2,7 +2,10 @@ import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 dotenv.config();
-import RoomModel from "../models/roomModel"
+import RoomModel from "../models/roomModel.js"
+import User from "../models/userModel.js";
+import { transporter } from "../config/nodemailerConfig.js";
+import MetaData from "../models/detaDataModel.js";
 
 
 
@@ -58,6 +61,113 @@ export class GetRoomDetails {
 }
 
 export class PostRoomDetails{
+
+    handleRoomRegister=async(req,res)=> {
+        try {
+            const {
+                email,
+                contactNumber,
+                district,
+                state,
+                occopancy,
+                fullAddress,
+                roomStatus,
+                roomHolding,
+                images,
+                ownerName,
+                roomSize
+            } = req.body.props
+            const checkUser = await User.findOne({email:email})
+            
+            if(!checkUser){
+                return res.status(401).json({status:"info",info:"User does not exist!!"})
+            }
+
+            const newRoom = new RoomModel({
+                ownerName: ownerName,
+                roomSize: roomSize,
+                email: email,
+                contactNumber: contactNumber,
+                district: district,
+                state:state,
+                occopancy: occopancy,
+                fullAddress: fullAddress,
+                roomStatus:roomStatus,
+                roomHolding: roomHolding,
+                images:images
+            })
+
+            await newRoom.save().then(async(result)=>{
+                await transporter.sendMail({
+                    to: email,
+                    from: process.env.OWNER_GMAIL,
+                    subject: "Room Register successfully!!",
+                    text: "Your Room is successfully posted in the platform"
+                }).then(()=>{
+                    return res.status(200).json({status:"success",info:result})
+                }).catch((e)=>{
+                    return res.status(402).json({status:"warning",info:"Email not able to send your address",message:e})
+                })
+            }).catch((err)=>{
+                return res.status(501).json({status:"error",info:err})
+            })
+        } catch (error) {
+            return res.status(500).json({status:"error",info: error})
+        }
+    }
+
+    roomMetaDataModifyer=async(req,res)=> {
+        try {
+            const {
+                email,
+                metaData
+            } = req.body.props
+
+            const checkUser = await User.findOne({email:email})
+            if(!checkUser){
+                return res.state(403).json({status:"info",info:"User does not exist!!"})
+            }
+            const findMetaData = await MetaData.findOne({email:email})
+            if(findMetaData){
+                await MetaData.updateOne({email:email},{$set:{metaData:metaData}}).then((result)=> {
+                    return res.status(200).json({status:"success",info: result})
+                }).catch((err)=> {
+                    return res.status(301).json({status:"warning",info: err})
+                })
+            }else{
+                const newMetaData = new MetaData({
+                    email: email,
+                    metaData: metaData
+                })
+
+                await newMetaData.save().then((result)=> {
+                    return res.status(200).json({status:"success",info:result})
+                }).catch((err)=> {
+                    return res.status(401).json({status:"error",info:err})
+                })
+            }
+        } catch (error) {
+            return res.status(500).json(500).json({status:"error",info:error})
+        }
+    }
+
+    getMetaData=async(req,res)=> {
+        try {
+            const {
+                email
+            } = req.params.props
+
+            const findData = await MetaData.findOne({email:email})
+
+            if(findData){
+                return res.status(200).json({status:"success",info:findData.metaData})
+            }else{
+                return res.status(403).json({status:"warning",info:"User does not exist!!!"})
+            }
+        } catch (error) {
+            return res.status(500).json({status:"error",info:error})
+        }
+    }
 
 }
 
