@@ -123,6 +123,9 @@ export class PostRoomDetails{
                 metaData
             } = req.body.props
 
+            if(!email){
+                return res.status(200).json({status:"warning"})
+            }
             const checkUser = await User.findOne({email:email})
             if(!checkUser){
                 return res.state(403).json({status:"info",info:"User does not exist!!"})
@@ -147,7 +150,7 @@ export class PostRoomDetails{
                 })
             }
         } catch (error) {
-            return res.status(500).json(500).json({status:"error",info:error})
+            return res.status(500).json({status:"error",info:error})
         }
     }
 
@@ -155,7 +158,7 @@ export class PostRoomDetails{
         try {
             const {
                 email
-            } = req.params.props
+            } = req.params
 
             const findData = await MetaData.findOne({email:email})
 
