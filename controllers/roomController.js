@@ -11,58 +11,58 @@ import MetaData from "../models/detaDataModel.js";
 
 export class GetRoomDetails {
 
-    getAllRoomList=async(req,res)=> {
+    getAllRoomList = async (req, res) => {
         try {
             const list = await RoomModel.find({})
-            if(list){
-                return res.status(200).json({status:"success",info:list})
-            }else{
-                return res.status(401).json({status:"failed",info:"Room collection list empty!!"})
+            if (list) {
+                return res.status(200).json({ status: "success", info: list })
+            } else {
+                return res.status(401).json({ status: "failed", info: "Room collection list empty!!" })
             }
         } catch (error) {
-            return res.status(500).json({status:"failed",info:error})
+            return res.status(500).json({ status: "failed", info: error })
         }
     }
 
-    getSelectedRoom=async(req,res)=>{
+    getSelectedRoom = async (req, res) => {
         try {
             const {
                 roomId
             } = req.params
 
-            const findRoom = await RoomModel.findOne({_id: roomId})
-            if(findRoom){
-                return res.status(200).json({status:"success",info: findRoom})
-            }else{
-                return res.status(401).json({status:"failed",info:'room not available in DB!'})
+            const findRoom = await RoomModel.findOne({ _id: roomId })
+            if (findRoom) {
+                return res.status(200).json({ status: "success", info: findRoom })
+            } else {
+                return res.status(401).json({ status: "failed", info: 'room not available in DB!' })
             }
         } catch (error) {
-            return res.status(500).json({status:"failed",info: error})
+            return res.status(500).json({ status: "failed", info: error })
         }
     }
 
-    getParticularUserBookingRoom=async(req,res)=> {
+    getParticularUserBookingRoom = async (req, res) => {
         try {
             const {
                 userEmail
             } = req.params
 
-            const all = await RoomModel.find({booked: userEmail})
-            if(all){
-                return res.status(200).json({status:"success",info:all})
-            }else{
-                return res.status(501).json({status:"failed",info:"Not Room booked yet!!"})
+            const all = await RoomModel.find({ booked: userEmail })
+            if (all) {
+                return res.status(200).json({ status: "success", info: all })
+            } else {
+                return res.status(501).json({ status: "failed", info: "Not Room booked yet!!" })
             }
         } catch (error) {
-            return res.status(500).json({status:"failed",info:  error})
+            return res.status(500).json({ status: "failed", info: error })
         }
     }
 
 }
 
-export class PostRoomDetails{
+export class PostRoomDetails {
 
-    handleRoomRegister=async(req,res)=> {
+    handleRoomRegister = async (req, res) => {
         try {
             const {
                 email,
@@ -77,10 +77,10 @@ export class PostRoomDetails{
                 ownerName,
                 roomSize
             } = req.body.props
-            const checkUser = await User.findOne({email:email})
-            
-            if(!checkUser){
-                return res.status(401).json({status:"info",info:"User does not exist!!"})
+            const checkUser = await User.findOne({ email: email })
+
+            if (!checkUser) {
+                return res.status(401).json({ status: "info", info: "User does not exist!!" })
             }
 
             const newRoom = new RoomModel({
@@ -89,95 +89,108 @@ export class PostRoomDetails{
                 email: email,
                 contactNumber: contactNumber,
                 district: district,
-                state:state,
+                state: state,
                 occopancy: occopancy,
                 fullAddress: fullAddress,
-                roomStatus:roomStatus,
+                roomStatus: roomStatus,
                 roomHolding: roomHolding,
-                images:images
+                images: images
             })
 
-            await newRoom.save().then(async(result)=>{
+            await newRoom.save().then(async (result) => {
                 await transporter.sendMail({
                     to: email,
                     from: process.env.OWNER_GMAIL,
                     subject: "Room Register successfully!!",
                     text: "Your Room is successfully posted in the platform"
-                }).then(()=>{
-                    return res.status(200).json({status:"success",info:result})
-                }).catch((e)=>{
-                    return res.status(402).json({status:"warning",info:"Email not able to send your address",message:e})
+                }).then(() => {
+                    return res.status(200).json({ status: "success", info: result })
+                }).catch((e) => {
+                    return res.status(402).json({ status: "warning", info: "Email not able to send your address", message: e })
                 })
-            }).catch((err)=>{
-                return res.status(501).json({status:"error",info:err})
+            }).catch((err) => {
+                return res.status(501).json({ status: "error", info: err })
             })
         } catch (error) {
-            return res.status(500).json({status:"error",info: error})
+            return res.status(500).json({ status: "error", info: error })
         }
     }
 
-    roomMetaDataModifyer=async(req,res)=> {
+    roomMetaDataModifyer = async (req, res) => {
+
         try {
             const {
                 email,
                 metaData
             } = req.body.props
 
-            if(!email){
-                return res.status(200).json({status:"warning"})
+            if (!email) {
+                return res.status(401).json({ status: "warning" })
             }
-            const checkUser = await User.findOne({email:email})
-            if(!checkUser){
-                return res.state(403).json({status:"info",info:"User does not exist!!"})
-            }
-            const findMetaData = await MetaData.findOne({email:email})
-            if(findMetaData){
-                await MetaData.updateOne({email:email},{$set:{metaData:metaData}}).then((result)=> {
-                    return res.status(200).json({status:"success",info: result})
-                }).catch((err)=> {
-                    return res.status(301).json({status:"warning",info: err})
-                })
-            }else{
-                const newMetaData = new MetaData({
-                    email: email,
-                    metaData: metaData
-                })
 
-                await newMetaData.save().then((result)=> {
-                    return res.status(200).json({status:"success",info:result})
-                }).catch((err)=> {
-                    return res.status(401).json({status:"error",info:err})
-                })
+            const isUserExist = await User.findOne({ email: email })
+
+            if (!isUserExist) {
+                return res.status(405).json({ status: "error", info: "User Does not Exist!!" })
+            } else {
+                const isMetaDataExist = await MetaData.findOne({ email: email })
+
+                if (!isMetaDataExist) {
+                    const newMetadata = new MetaData({
+                        email: email,
+                        metaData: metaData
+                    })
+
+                    await newMetadata.save()
+                    return res.status(200).json({status:"success",info: newMetadata})
+                } else {
+                    if (isMetaDataExist.metaData.serviceType == metaData.serviceType) {
+                        const updateProjectMetadata = await MetaData.updateOne({ email: email }, { $set: { metaData: metaData } })
+                        if (updateProjectMetadata) {
+                            return res.status(200).json({ status: "Data updated successfully", info: updateProjectMetadata })
+                        }
+                    } else {
+                        const newMetadata = new MetaData({
+                            email: email,
+                            metaData: metaData
+                        })
+
+                        await newMetadata.save()
+
+                        return res.status(200).json({status:"success",info: newMetadata})
+                    }
+                }
             }
+
         } catch (error) {
-            return res.status(500).json({status:"error",info:error})
+            return res.status(500).json({ status: "error", info: error })
         }
     }
 
-    getMetaData=async(req,res)=> {
+    getMetaData = async (req, res) => {
         try {
             const {
                 email
             } = req.params
 
-            const findData = await MetaData.findOne({email:email})
+            const findData = await MetaData.findOne({ email: email })
 
-            if(findData){
-                return res.status(200).json({status:"success",info:findData.metaData})
-            }else{
-                return res.status(403).json({status:"warning",info:"User does not exist!!!"})
+            if (findData) {
+                return res.status(200).json({ status: "success", info: findData.metaData })
+            } else {
+                return res.status(403).json({ status: "warning", info: "User does not exist!!!" })
             }
         } catch (error) {
-            return res.status(500).json({status:"error",info:error})
+            return res.status(500).json({ status: "error", info: error })
         }
     }
 
 }
 
-export class ModifyedRoomDetails{
+export class ModifyedRoomDetails {
 
 }
 
-export class DeleteRoomDetails{
+export class DeleteRoomDetails {
 
 }
