@@ -131,7 +131,7 @@ export class PostRoomDetails {
             const isUserExist = await User.findOne({ email: email })
 
             if (!isUserExist) {
-                return res.status(405).json({ status: "error", info: "User Does not Exist!!" })
+                res.status(500).json({ status: "error", info: "User Does not Exist!!" })
             } else {
                 const isMetaDataExist = await MetaData.findOne({ email: email })
 
