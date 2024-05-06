@@ -12,6 +12,7 @@ const RoomDeleteControl = new DeleteRoomDetails()
 const GlobalData = new GlobalControl()
 
 
+
 router.get('/login/:email/:password',UserGetcontroller.getUserLogin)
 
 
@@ -26,8 +27,11 @@ router.post('/change-password', UserPostcontroller.changePassword);
 
 router.get('/all-servce-list',GlobalData.getAllServices)
 router.post("/register-room",RoomPostControl.handleRoomRegister)
-router.post('/metadata-post',RoomPostControl.roomMetaDataModifyer)
+router.post('/metadata-post', RoomPostControl.roomMetaDataModifyer)
 router.get('/detadata/:email',RoomPostControl.getMetaData)
+
+router.post('/upload-image',RoomPostControl.HandleUploadImage)
+router.post("/delete",RoomPostControl.HandleRemovedImage)
 
 
 

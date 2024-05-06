@@ -16,9 +16,11 @@ export const transporter = nodemailer.createTransport({
 
 const Storage = multer.diskStorage({
     destination:(req,file,cd)=>{
+        console.log("from multer..",req,file,cd)
         cd(null,"uploads/")
     },
     filename:(req,file,cd)=>{
+        console.log("from multer1..",req,file,cd)
         cd(null,Date.now()+"-"+file.originalname)
     }
 })

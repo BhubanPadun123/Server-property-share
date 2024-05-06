@@ -15,7 +15,7 @@ app.use(cors())
 const corsOptions = {
     origin: '*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true, // enable set cookie with CORS
+    credentials: false, // enable set cookie with CORS
     optionsSuccessStatus: 204,
 };
 app.use(cors(corsOptions))

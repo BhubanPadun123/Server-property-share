@@ -176,12 +176,67 @@ export class PostRoomDetails {
             const findData = await MetaData.findOne({ email: email })
 
             if (findData) {
-                return res.status(200).json({ status: "success", info: findData.metaData })
+                 res.status(200).json({ status: "success", info: findData })
             } else {
-                return res.status(403).json({ status: "warning", info: "User does not exist!!!" })
+                 res.status(403).json({ status: "warning", info: "User does not exist!!!" })
             }
         } catch (error) {
-            return res.status(500).json({ status: "error", info: error })
+             res.status(500).json({ status: "error", info: error })
+        }
+    }
+
+    HandleUploadImage=async(req,res)=> {
+        try {
+            const {
+                email,
+                image
+            } = req.body.props
+            const metaData = await MetaData.findOne({email:email})
+            if(metaData){
+                metaData.images.push({
+                    src:image,
+                    key: Math.random().toString(36).substring(2, 15)
+                })
+
+                await metaData.save().then((result)=> {
+                    res.status(200).json({message:"Image Upload successfull",info:result})
+                }).catch((error)=> {
+                    res.status(401).json({status:"error",info:error})
+                })
+            }else{
+                res.status(500).json({status:"error",info:"Error while upload image"})
+            }
+        } catch (error) {
+            res.send("Error===>",JSON.stringify(error))
+        }
+    }
+    HandleRemovedImage=async(req,res)=> {
+
+       
+        try {
+            const {
+                email,
+                image
+            } = req.body.props
+
+            const metaData = await MetaData.findOne({email:email})
+
+            if(metaData){
+                if(metaData.images.length > 0){
+                    let imagesCollection = metaData.images.filter((item)=> item.src !== image)
+                    metaData.images = imagesCollection;
+                    await metaData.save().then((result)=> {
+                        return res.status(200).json({status:"success",info: result})
+                    }).catch((error)=> {
+                        return res.status(401).json({status:"warning",info:error})
+                    })
+                }
+            }else{
+                res.status(500).json({status:"error",info:"Error while Delete the image"})
+            }
+            
+        } catch (error) {
+            res.status(500).json({status:"error",info:error})
         }
     }
 

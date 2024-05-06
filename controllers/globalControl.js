@@ -11,12 +11,12 @@ export class GlobalControl {
         try {
             const allList = await MetaData.find({})
             if(allList){
-                return res.status(200).json({status:"success",info: allList})
+                res.status(200).json({status:"success",info: allList})
             }else{
-                return res.status(401).json({status:"info",info:"No data found!!!"})
+                res.status(401).json({status:"info",info:"No data found!!!"})
             }
         } catch (error) {
-            return res.status(500).json({status:"error",info:error})
+            res.status(500).json({status:"error",info:error})
         }
     }
 }
