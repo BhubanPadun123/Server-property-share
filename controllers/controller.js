@@ -52,13 +52,13 @@ export class UserPostController {
         const { username, email, password, cpassword } = req.body.props;
 
         if (password !== cpassword) {
-            return res.status(400).json({ status: "failed", info: "Password misMatch!!!" });
+            res.status(400).json({ status: "failed", info: "Password misMatch!!!" });
         }
         //check if user already exists
         const existingUser = await User.findOne({ email: email });
 
         if (existingUser) {
-            return res.status(401).json({ status: "failed", info: "User already exists" });
+            res.status(401).json({ status: "failed", info: "User already exists" });
         } else {
             const hashedPassword = await bcrypt.hash(password, 10);
             const opt = otpGenerator.generate(6, { digits: true, lowerCaseAlphabets: false, upperCaseAlphabets: false, specialChars: false })
@@ -81,9 +81,9 @@ export class UserPostController {
                     text: `OTP Verifivation. i will expire - ${expiredTime} and OTP is - ${opt}`,
                     subject: "Verify your account."
                 })
-                return res.status(201).json({ status: "success", info: "User created successfully" });
+                res.status(201).json({ status: "success", info: "User created successfully" });
             } catch (error) {
-                return res.status(409).json({ message: error.message });
+                res.status(409).json({ message: error.message });
             }
         }
     };
@@ -99,16 +99,17 @@ export class UserPostController {
 
             if (existingUser) {
                 if (isPasswordCorrect) {
-                    return res.status(200).json({ status: "success", info: "loginsuccessfully!!" })
+                    let isUserVerify = existingUser.verify
+                    res.status(200).json({ status: "success", info: {message:"loginsuccessfully!!",verify:isUserVerify} })
                 } else {
-                    return res.status(201).json({ status: "warning", info: "password mismatch!!" })
+                    res.status(500).json({ status: "warning", info: "password mismatch!!" })
                 }
             } else {
-                return res.status(402).json({ status: "error", info: "User does not exist" })
+                res.status(402).json({ status: "error", info: "User does not exist" })
             }
         }
         catch (error) {
-            return res.status(500).json({ status: "failed", info: error })
+            res.status(500).json({ status: "failed", info: error })
         }
     }
 
