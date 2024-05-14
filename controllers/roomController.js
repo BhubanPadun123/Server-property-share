@@ -121,11 +121,22 @@ export class PostRoomDetails {
         try {
             const {
                 email,
-                metaData
+                metaData,
+                images
             } = req.body.props
+            const {
+                candidateDetails,
+                serviceType,
+                serviceList,
+                candidateName,
+                roomDetail,
+                roomAminities,
+                adderess,
+                roomSearch
+            } = metaData
 
             if (!email) {
-                return res.status(401).json({ status: "warning" })
+                res.status(401).json({ status: "warning", info: "Email Should not be Empty Fields" })
             }
 
             const isUserExist = await User.findOne({ email: email })
@@ -138,26 +149,58 @@ export class PostRoomDetails {
                 if (!isMetaDataExist) {
                     const newMetadata = new MetaData({
                         email: email,
-                        metaData: metaData
+                        metaData: {
+                            address: adderess,
+                            serviceDetails: serviceList,
+                            serviceType: serviceType,
+                            ownerDetails: candidateDetails,
+                            propertyDetails: {
+                                roomAminities,
+                                candidateName,
+                                roomDetail,
+                                roomSearch
+                            }
+                        },
+                        images: images
                     })
 
                     await newMetadata.save()
-                    return res.status(200).json({status:"success",info: newMetadata})
+                    res.status(200).json({ status: "success", info: newMetadata })
                 } else {
-                    if (isMetaDataExist.metaData.serviceType == metaData.serviceType) {
-                        const updateProjectMetadata = await MetaData.updateOne({ email: email }, { $set: { metaData: metaData } })
+                    if (isMetaDataExist.metaData.serviceType == serviceType) {
+                        const updateProjectMetadata = await MetaData.findOneAndUpdate(
+                            { email: email },
+                            {
+                                $set: {
+                                    metaData: {
+                                        address: adderess,
+                                        serviceDetails: serviceList,
+                                        serviceType: serviceType,
+                                        ownerDetails: candidateDetails,
+                                        propertyDetails: {
+                                            roomAminities,
+                                            candidateName,
+                                            roomDetail,
+                                            roomSearch
+                                        }
+                                    }
+                                }
+                            },
+                            {new:true}
+                        )
                         if (updateProjectMetadata) {
-                            return res.status(200).json({ status: "Data updated successfully", info: updateProjectMetadata })
+                            res.status(200).json({ status: "Data updated successfully", info: updateProjectMetadata })
                         }
                     } else {
                         const newMetadata = new MetaData({
                             email: email,
-                            metaData: metaData
+                            metaData: metaData,
+                            images: images
                         })
 
                         await newMetadata.save()
 
-                        return res.status(200).json({status:"success",info: newMetadata})
+                        res.status(200).json({ status: "success", info: newMetadata })
                     }
                 }
             }
@@ -176,67 +219,67 @@ export class PostRoomDetails {
             const findData = await MetaData.findOne({ email: email })
 
             if (findData) {
-                 res.status(200).json({ status: "success", info: findData })
+                res.status(200).json({ status: "success", info: findData })
             } else {
-                 res.status(403).json({ status: "warning", info: "User does not exist!!!" })
+                res.status(403).json({ status: "warning", info: "User does not exist!!!" })
             }
         } catch (error) {
-             res.status(500).json({ status: "error", info: error })
+            res.status(500).json({ status: "error", info: error })
         }
     }
 
-    HandleUploadImage=async(req,res)=> {
+    HandleUploadImage = async (req, res) => {
         try {
             const {
                 email,
                 image
             } = req.body.props
-            const metaData = await MetaData.findOne({email:email})
-            if(metaData){
+            const metaData = await MetaData.findOne({ email: email })
+            if (metaData) {
                 metaData.images.push({
-                    src:image,
+                    src: image,
                     key: Math.random().toString(36).substring(2, 15)
                 })
 
-                await metaData.save().then((result)=> {
-                    res.status(200).json({message:"Image Upload successfull",info:result})
-                }).catch((error)=> {
-                    res.status(401).json({status:"error",info:error})
+                await metaData.save().then((result) => {
+                    res.status(200).json({ message: "Image Upload successfull", info: result })
+                }).catch((error) => {
+                    res.status(401).json({ status: "error", info: error })
                 })
-            }else{
-                res.status(500).json({status:"error",info:"Error while upload image"})
+            } else {
+                res.status(500).json({ status: "error", info: "Error while upload image" })
             }
         } catch (error) {
-            res.send("Error===>",JSON.stringify(error))
+            res.send("Error===>", JSON.stringify(error))
         }
     }
-    HandleRemovedImage=async(req,res)=> {
+    HandleRemovedImage = async (req, res) => {
 
-       
+
         try {
             const {
                 email,
                 image
             } = req.body.props
 
-            const metaData = await MetaData.findOne({email:email})
+            const metaData = await MetaData.findOne({ email: email })
 
-            if(metaData){
-                if(metaData.images.length > 0){
-                    let imagesCollection = metaData.images.filter((item)=> item.src !== image)
+            if (metaData) {
+                if (metaData.images.length > 0) {
+                    let imagesCollection = metaData.images.filter((item) => item.src !== image)
                     metaData.images = imagesCollection;
-                    await metaData.save().then((result)=> {
-                        return res.status(200).json({status:"success",info: result})
-                    }).catch((error)=> {
-                        return res.status(401).json({status:"warning",info:error})
+                    await metaData.save().then((result) => {
+                        return res.status(200).json({ status: "success", info: result })
+                    }).catch((error) => {
+                        return res.status(401).json({ status: "warning", info: error })
                     })
                 }
-            }else{
-                res.status(500).json({status:"error",info:"Error while Delete the image"})
+            } else {
+                res.status(500).json({ status: "error", info: "Error while Delete the image" })
             }
-            
+
         } catch (error) {
-            res.status(500).json({status:"error",info:error})
+            res.status(500).json({ status: "error", info: error })
         }
     }
 

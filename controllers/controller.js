@@ -140,29 +140,36 @@ export class UserPostController {
         const {
             email,
             otp
-        } = req.body
+        } = req.body.props
 
         try {
             const findUser = await User.findOne({ email: email })
-            if (otp != findUser.otp) {
-                return res.status(402).json({ status: "warning", info: "Invalid OTP enter" })
+            if (otp != findUser.otp.toString()) {
+                //compared the expire time
+                let currentTime = new Date(Date.now())
+                let expiredTime = new Date(findUser.otpExpire)
+                if(currentTime > expiredTime){
+                    res.status(500).json({status:"expired",info:"OTP Expired"})
+                }else{
+                    res.status(402).json({ status: "warning", info: "Invalid OTP enter" })
+                }                
             } else {
                 const currentDate = new Date()
                 if (currentDate < findUser.otpExpire) {
                     const verifyUser = await User.updateOne({ email: email }, { $set: { verify: true } })
-                    return res.status(200).json({ status: "success", info: "OTP verifying successfully!!" })
+                    res.status(200).json({ status: "success", info: "OTP verifying successfully!!" })
                 } else {
-                    return res.status(301).json({ status: "warning", info: "OTP expired" })
+                    res.status(301).json({ status: "warning", info: "OTP expired" })
                 }
             }
         } catch (error) {
-            return res.status(500).json({ info: "failed", info: error })
+            res.status(500).json({ info: "failed", info: error })
         }
     }
     resendVerificationOTP = async (req, res) => {
         const {
             email
-        } = req.body
+        } = req.body.props
 
         try {
             const otp = otpGenerator.generate(6, { digits: true, lowerCaseAlphabets: false, upperCaseAlphabets: false, specialChars: false })
@@ -170,12 +177,12 @@ export class UserPostController {
             const updateUser = await User.updateOne({ email: email }, { $set: { otp: otp, otpExpire: expiredTime } })
             if (updateUser) {
                 this.sendOPT({ email: email })
-                return res.status(200).json({ status: "success", info: "OTP reset successfully!!" })
+                res.status(200).json({ status: "success", info: "OTP reset successfully!!" })
             } else {
-                return res.status(401).json({ status: "failed", info: "API called failed while fetch data" })
+                res.status(401).json({ status: "failed", info: "API called failed while fetch data" })
             }
         } catch (error) {
-            return res.status(500).json({ status: "failed", info: error })
+            res.status(500).json({ status: "failed", info: error })
         }
     }
 

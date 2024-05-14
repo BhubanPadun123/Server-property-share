@@ -2,7 +2,13 @@ import mongoose from "mongoose";
 
 
 const metaDataSchema = new mongoose.Schema({
-    metaData:{type: Object},
+    metaData:{
+        address:{type:Object},
+        serviceType:{type:String},
+        ownerDetails:{type: Object},
+        serviceDetails:{type:Object},
+        propertyDetails:{type: Object}
+    },
     email:{type:String},
     images:{type:Array}
 })
