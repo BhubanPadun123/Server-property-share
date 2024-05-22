@@ -6,6 +6,9 @@ import RoomModel from "../models/roomModel.js"
 import User from "../models/userModel.js";
 import { transporter } from "../config/nodemailerConfig.js";
 import MetaData from "../models/detaDataModel.js";
+import { serviceListData } from "../utils/serviceList.js";
+import PostServiceData from "./postServiceData.js";
+const HandleServiceDataPost = new PostServiceData()
 
 
 
@@ -144,63 +147,69 @@ export class PostRoomDetails {
             if (!isUserExist) {
                 res.status(500).json({ status: "error", info: "User Does not Exist!!" })
             } else {
-                const isMetaDataExist = await MetaData.findOne({ email: email })
-
-                if (!isMetaDataExist) {
-                    const newMetadata = new MetaData({
-                        email: email,
-                        metaData: {
-                            address: adderess,
-                            serviceDetails: serviceList,
-                            serviceType: serviceType,
-                            ownerDetails: candidateDetails,
-                            propertyDetails: {
-                                roomAminities,
-                                candidateName,
-                                roomDetail,
-                                roomSearch
-                            }
-                        },
-                        images: images
-                    })
-
-                    await newMetadata.save()
-                    res.status(200).json({ status: "success", info: newMetadata })
-                } else {
-                    if (isMetaDataExist.metaData.serviceType == serviceType) {
-                        const updateProjectMetadata = await MetaData.findOneAndUpdate(
-                            { email: email },
-                            {
-                                $set: {
-                                    metaData: {
-                                        address: adderess,
-                                        serviceDetails: serviceList,
-                                        serviceType: serviceType,
-                                        ownerDetails: candidateDetails,
-                                        propertyDetails: {
-                                            roomAminities,
-                                            candidateName,
-                                            roomDetail,
-                                            roomSearch
-                                        }
-                                    }
-                                }
-                            },
-                            {new:true}
-                        )
-                        if (updateProjectMetadata) {
-                            res.status(200).json({ status: "Data updated successfully", info: updateProjectMetadata })
+                const checkData = await MetaData.findOne({email:email})
+                if (checkData && checkData.metaData.serviceType === serviceType) {
+                    res.status(401).json({ message: "User Already exist in data list!!" })
+                }else {
+                    if (serviceType && serviceType === serviceListData.room) {
+                        const { error, response } = await HandleServiceDataPost.PostRoomService({
+                            candidateDetails,
+                            serviceType,
+                            serviceList,
+                            candidateName,
+                            roomDetail,
+                            roomAminities,
+                            adderess,
+                            roomSearch,
+                            email,
+                            images
+                        })
+                        if (response) {
+                            res.status(200).json({ response })
                         }
-                    } else {
-                        const newMetadata = new MetaData({
-                            email: email,
-                            metaData: metaData,
-                            images: images
+                        if (error) {
+                            res.status(500).json({ error })
+                        }
+                    }else if (serviceType && serviceType === serviceListData.hospital) {
+                        const {error,response} = await HandleServiceDataPost.PostHospitalService({
+                            email,
+                            images,
+                            metaData
                         })
 
-                        await newMetadata.save()
+                        if(error){
+                            res.status(500).json({error})
+                        }
+                        if(response){
+                            res.status(200).json({response})
+                        }
+                    }else if(serviceType && serviceType === serviceListData.tractor){
+                        const {error,response} = await HandleServiceDataPost.PostTractorService({
+                            email,
+                            images,
+                            metaData
+                        })
 
-                        res.status(200).json({ status: "success", info: newMetadata })
+                        if(error){
+                            res.status(500).json({error})
+                        }
+                        if(response){
+                            res.status(200).json({response})
+                        }
+                    }
+                    else if(serviceType && serviceType === serviceListData.labour){
+                        const {error,response} = await HandleServiceDataPost.PostLabourService({
+                            email,
+                            images,
+                            metaData
+                        })
+
+                        if(error){
+                            res.status(500).json({error})
+                        }
+                        if(response){
+                            res.status(200).json({response})
+                        }
                     }
                 }
             }
