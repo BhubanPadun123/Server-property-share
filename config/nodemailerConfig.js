@@ -4,9 +4,11 @@ dotenv.config()
 import express from 'express'
 import multer from 'multer'
 
-// Create a transporter
+
 export const transporter = nodemailer.createTransport({
     service: 'gmail',
+    secure:false,
+    port:process.env.PORT,
     auth: {
         user: process.env.OWNER_GMAIL,
         pass: process.env.GMAIL_PASSWORD

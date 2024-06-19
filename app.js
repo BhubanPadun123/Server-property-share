@@ -1,9 +1,9 @@
 import express from 'express'
 import bodyParser from 'body-parser'
 import dotenv from 'dotenv'
+import cookieParser from "cookie-parser"
 import { connectUsingMongoose } from './config/mongodb.js'
 import router from "./routes/routes.js"
-import authrouter from "./routes/authRoutes.js"
 dotenv.config()
 const app = express()
 import cors from "cors"
@@ -21,6 +21,9 @@ const corsOptions = {
 app.use(cors(corsOptions))
 app.use(express.json())
 app.use(bodyParser.json());
+app.use(cookieParser())
+app.use(express.urlencoded({extended:true,limit:"200kb"}))
+app.use(express.json({limit:"300kb"}))
 
 
 //connect DB

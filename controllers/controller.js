@@ -5,6 +5,9 @@ import { transporter } from "../config/nodemailerConfig.js";
 import dotenv from "dotenv";
 import otpGenerator, { generate } from "otp-generator"
 dotenv.config();
+import {ApiError} from "../config/apiError.js"
+import {ApiResponse} from "../config/apiResponse.js"
+import {uploadCloudinary} from "../config/cloudinary.js"
 
 export class UserGetController {
 
@@ -49,36 +52,64 @@ export class UserPostController {
 
     //sign up
     createUser = async (req, res) => {
-        const { username, email, password, cpassword } = req.body.props;
+        const { 
+            email, 
+            password,
+            username,
+            userType,
+            fullName,
+        } = req.body.props;
 
-        if (password !== cpassword) {
-            res.status(400).json({ status: "failed", info: "Password misMatch!!!" });
+        //check is all values are available? 
+        if(
+            [email,password,userType,username,fullName].some((field)=> field && field.trim() === "")
+        ){
+            throw new ApiError(400,"All fields are mandatory!!")
         }
         //check if user already exists
-        const existingUser = await User.findOne({ email: email });
+        const existingUser = await User.findOne({
+            $or:[{email},{username}]
+        });
 
         if (existingUser) {
-            res.status(401).json({ status: "failed", info: "User already exists" });
+            throw new ApiError(402,"User already exist!!")
         } else {
-            const hashedPassword = await bcrypt.hash(password, 10);
             const opt = otpGenerator.generate(6, { digits: true, lowerCaseAlphabets: false, upperCaseAlphabets: false, specialChars: false })
             const expiredTime = new Date(Date.now() + 5 * 60000)
 
-            const newUser = new User({
-                username:username,
-                email:email,
-                password:hashedPassword,
+            const avatarLocalPath = req.files && req.files.avatar[0].path
+            if(!avatarLocalPath){
+                throw new ApiError(405,"User profile image is not be empty!!")
+            }
+            const avatar = await uploadCloudinary(avatarLocalPath)
+
+
+            const newUser =  User.create({
+                username:username.toLowerCase(),
+                email,
+                userType,
+                verify:false,
+                fullName:fullName.toLowerCase(),
+                avatar:avatar.url ? avatar.url :"",
+                password,
                 verify:false,
                 otp: opt,
                 otpExpire: expiredTime
             })
 
-            try {
-                await newUser.save();
+            const createdUser = await User.findById(newUser._id).select(
+                "-password  -otp  -otpExpire"
+            )
+
+            if(!createdUser){
+                throw new ApiError(403,"Something went wrong while create the user!!")
+            }
+
+            try {                
                 transporter.sendMail({
                     to:email,
                     from: process.env.OWNER_GMAIL,
-                    text: `OTP Verifivation. i will expire - ${expiredTime} and OTP is - ${opt}`,
+                    text: `OTP Verifivation. i will expire -<h1> ${expiredTime} </h1> and OTP is - <h1>${opt}</h1/>`,
                     subject: "Verify your account."
                 })
                 res.status(201).json({ status: "success", info: "User created successfully" });
@@ -88,24 +119,62 @@ export class UserPostController {
         }
     };
 
-    //sign in
+    getAccessAndRefreshToken=async(id)=>{
+        try {
+            const user = await User.findById(id)
+            const accessToken = user.generateAccessToken();
+            const refreshToken = user.generateRefreshToken
+            user.refreshToken = refreshToken
+            await user.save({validateBeforeSave:false})
+
+            return {
+                accessToken,
+                refreshToken
+            }
+        } catch (error) {
+            throw new ApiError(500,"Something went wrong while refresh the access  token!!")
+        }
+    }
+
+    //login
     signInUser = async (req, res) => {
         
         const { email, password } = req.body.props;
 
         try {
+            if(!email || !password){
+                throw new ApiError(401,"Email and password required field!!!")
+            }
             const existingUser = await User.findOne({ email: email });
-            const isPasswordCorrect = await bcrypt.compare(password, existingUser.password);
 
-            if (existingUser) {
-                if (isPasswordCorrect) {
-                    let isUserVerify = existingUser.verify
-                    res.status(200).json({ status: "success", info: {message:"loginsuccessfully!!",verify:isUserVerify} })
-                } else {
-                    res.status(500).json({ status: "warning", info: "password mismatch!!" })
+            if(!existingUser) {
+                throw new ApiError(501,"User does not exist!!")
+            }
+            //const isPasswordCorrect = await bcrypt.compare(password, existingUser.password);
+            const isCorrectPassword = await existingUser.isPasswordCorrect(password)
+            
+            if(!isCorrectPassword){
+                throw new ApiError(406,"Password is incorrect!!")
+            }
+            else{
+                const {accessToken,refreshToken} = await this.getAccessAndRefreshToken(existingUser._id)
+                const loginUser = await User.findById(existingUser._id).select("-password  -refreshToken")
+
+                const options = {
+                    httpOnly:true,
+                    secure: true
                 }
-            } else {
-                res.status(402).json({ status: "error", info: "User does not exist" })
+
+                return res.status(200).cookie(
+                    "accessToken",accessToken,options
+                ).cookie(
+                    "refreshToken",refreshToken,options
+                ).json(
+                    new ApiResponse(
+                        200,
+                        "User Login successfully!!"
+                    )
+                )
             }
         }
         catch (error) {
@@ -118,6 +187,7 @@ export class UserPostController {
             const {
                 email
             } = props
+            console.log("email-->",email,process.env.OWNER_GMAIL)
             const opt = otpGenerator.generate(6, { digits: true, lowerCaseAlphabets: false, upperCaseAlphabets: false, specialChars: false })
             const expiredTime = new Date(Date.now() + 5 * 60000)
 
@@ -133,7 +203,7 @@ export class UserPostController {
                 console.log("Error")
             }
         } catch (error) {
-            console.log("Error")
+            console.log("Error-->",error)
         }
     }
     verifyUserOTP = async (req, res) => {
@@ -157,6 +227,12 @@ export class UserPostController {
                 const currentDate = new Date()
                 if (currentDate < findUser.otpExpire) {
                     const verifyUser = await User.updateOne({ email: email }, { $set: { verify: true } })
+                    await transporter.sendMail({
+                        from:process.env.OWNER_GMAIL,
+                        to:email,
+                        subject:"User Verify Successfully!!!",
+                        html:"<h1>Thank you for successfully verifying your account</h1>"
+                    })
                     res.status(200).json({ status: "success", info: "OTP verifying successfully!!" })
                 } else {
                     res.status(301).json({ status: "warning", info: "OTP expired" })
@@ -176,7 +252,7 @@ export class UserPostController {
             const expiredTime = new Date(Date.now() + 5 * 60000)
             const updateUser = await User.updateOne({ email: email }, { $set: { otp: otp, otpExpire: expiredTime } })
             if (updateUser) {
-                this.sendOPT({ email: email })
+                await this.sendOPT({ email: email })
                 res.status(200).json({ status: "success", info: "OTP reset successfully!!" })
             } else {
                 res.status(401).json({ status: "failed", info: "API called failed while fetch data" })

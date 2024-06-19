@@ -2,6 +2,7 @@ import express from 'express'
 import {UserGetController, UserPostController} from '../controllers/controller.js'
 import { GetRoomDetails,PostRoomDetails,DeleteRoomDetails } from '../controllers/roomController.js'
 import { GlobalControl } from '../controllers/globalControl.js'
+import {upload} from "../middleware/multer.middleware.js"
 
 const router = express.Router()
 const UserGetcontroller = new UserGetController()
@@ -18,7 +19,7 @@ router.get('/login/:email/:password',UserGetcontroller.getUserLogin)
 
 
 //POST REQUESTS
-router.post('/signup', UserPostcontroller.createUser);
+router.post('/signup',upload.single("avatar"), UserPostcontroller.createUser);
 router.post("/verifyotp",UserPostcontroller.verifyUserOTP)
 router.post("/resetverification",UserPostcontroller.resendVerificationOTP)
 router.post('/signin', UserPostcontroller.signInUser);
