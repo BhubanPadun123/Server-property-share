@@ -1,0 +1,45 @@
+doctype html
+html
+  title Current Market Price
+  style.
+    .form-group{
+      display:flex;
+      flex-direction:row;
+      gap:20px
+    }
+    .wrapper{
+      width:100%;
+      height:100%;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      margin-top:40px;
+    }
+    form{
+      display:flex;
+      flex-direction:column;
+      gap:20px;
+      border:1px solid;
+      padding:10px
+    }
+    label{
+      width:-webkit-fill-available;
+      font-family:Lato;
+      font-style:normal;
+      font-width:500;
+    }
+  include components/header.pug
+  .wrapper
+    .sub-container
+      form(action="/market" method="POST")
+        .form-group
+          label(for="international") International Market Price:
+          input#international.form-control(type="text" name="international" placeholder="Enter International Market Price" value=international required)
+        .form-group
+          label(for="local_min") Local Market Price(MIN):
+          input#local_min.form-control(type="text" name="local_min" placeholder="Enter Local Market Price(MIN)" value=local_min required)
+        .form-group
+          label(for="local_max") Local Market Price(MAX):
+          input#local_max.form-control(type="text" name="local_max" placeholder="Enter Local Market Price(MAX)" value=local_max required)
+        button.btn.btn-primary(type="submit") UPDATE
+

@@ -1,0 +1,44 @@
+html
+  title= title
+  include components/header.pug 
+  style.
+     .wrapper{
+      width:100%;
+      height:100%;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+     }
+     .sub-wrapper{
+      padding:10px;
+      border:1px solid;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      justify-content:center;
+      align-items:center;
+     }
+     h1{
+      color:#e6b115;
+     }
+     .content{
+      display :flex;
+      gap:4px;
+      align-items:center;
+     }
+  .wrapper
+     .sub-wrapper 
+        h1 Welcome to the coffee crop care dashboard.
+        .content
+            h3 Current International market Price= Rs
+            span=international
+        .content
+            h3 Current Local market Price(MIN)= Rs
+            span=local_min
+        .content
+            h3 Current Local market Price(MAX)= Rs
+            span=local_max
+        a(class='button' href='/api/auth/price/update')
+           button Update price
+        //- <br />
+        //- a(class='button' href='/api/auth/signout') Logout

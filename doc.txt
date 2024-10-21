@@ -1,0 +1,47 @@
+Create table:
+
+login table:
+
+CREATE TABLE login (
+    id int NOT NULL AUTO_INCREMENT, 
+    username varchar(10) NOT NULL,
+    password varchar(80),
+    created_on timestamp default now(),
+    modified_on timestamp default now() on update now(),
+    PRIMARY KEY (id)
+);
+
+insert into login values ("coffeeadmin", "771941ccf4c83797f98062443427d6d82cdd65d56bbdd73b9336381e476f8e63");
+
+mysql> select * from login;
++----+----------+------------------------------------------------------------------+---------------------+---------------------+
+| id | username | password                                                         | created_on          | modified_on         |
++----+----------+------------------------------------------------------------------+---------------------+---------------------+
+|  1 | admin    | 771941ccf4c83797f98062443427d6d82cdd65d56bbdd73b9336381e476f8e63 | 2024-07-10 21:51:14 | 2024-07-10 21:51:14 |
++----+----------+------------------------------------------------------------------+---------------------+---------------------+
+1 row in set (0.00 sec)
+
+CREATE USER 'coffecrop'@'localhost' IDENTIFIED BY 'Bhuban@12345';
+GRANT ALL PRIVILEGES ON *.* TO 'coffecrop'@'localhost' WITH GRANT OPTION;
+
+CREATE TABLE current_market_value (
+    id int NOT NULL AUTO_INCREMENT, 
+    name varchar(100) NOT NULL,
+    price int NOT NULL,
+    created_on timestamp default now(),
+    modified_on timestamp default now() on update now(),
+    PRIMARY KEY (id)
+);
+INSERT INTO current_market_value (name, price) VALUES ('coffe', 100);
+
+UPDATE current_market_value
+SET price = CASE
+    WHEN name = 'international' THEN 200
+    WHEN name = 'local_min' THEN 100
+    WHEN name = 'local_max' THEN 400
+    ELSE price
+END,
+modified_on = NOW()
+WHERE name IN ('international', 'local_min', 'local_max');
+
+
