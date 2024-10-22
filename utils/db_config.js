@@ -8,7 +8,7 @@ if (isProduction) {
         host: process.env.MYSQLHOST,
         port: process.env.MYSQLPORT,
         user: process.env.MYSQLUSER,
-        password: process.env.MYSQL_ROOT_PASSWORD
+        password: process.env.MYSQLPASSWORD
     })
 } else {
     DB_POOL = mysql.createPool({
@@ -25,7 +25,7 @@ if (isProduction) {
         host: process.env.MYSQLHOST,
         port: process.env.MYSQLPORT,
         user: process.env.MYSQLUSER,
-        password: process.env.MYSQL_ROOT_PASSWORD
+        password: process.env.MYSQLPASSWORD
     })
 } else {
     DB = mysql.createConnection({
