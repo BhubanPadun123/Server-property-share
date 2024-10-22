@@ -5,7 +5,8 @@ const isProduction = process.env.NODE_ENV === 'production';
 let DB = null;
 
 // Use a single pool for both production and development environments
-const urlDB = `mysql://root:${process.env.MYSQLPASSWORD}@mysql.railway.internal:3306/railway`
+//mysql://root:nZjKwOsGKFYOsVIRIEzaIqEcouyfGZJl@junction.proxy.rlwy.net:15743/railway
+const urlDB = `mysql://root:nZjKwOsGKFYOsVIRIEzaIqEcouyfGZJl@junction.proxy.rlwy.net:15743/railway`
 if (isProduction) {
     // DB = mysql.createPool({
     //     host: process.env.MYSQLHOST,
