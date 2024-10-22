@@ -6,7 +6,7 @@ let DB = null;
 
 // Use a single pool for both production and development environments
 //mysql://root:nZjKwOsGKFYOsVIRIEzaIqEcouyfGZJl@junction.proxy.rlwy.net:15743/railway
-const urlDB = `mysql://root:nZjKwOsGKFYOsVIRIEzaIqEcouyfGZJl@junction.proxy.rlwy.net:15743/railway`
+const urlDB = `mysql://root:nZjKwOsGKFYOsVIRIEzaIqEcouyfGZJl@host:3306/railway`
 if (isProduction) {
     // DB = mysql.createPool({
     //     host: process.env.MYSQLHOST,
