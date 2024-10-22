@@ -18,7 +18,7 @@ const cookieParser = require('cookie-parser');
 // })
 
 const app = express();
-const PORT = 9000;
+const PORT = process.env.PORT || 9000;
 
 app.set('view engine', 'pug')
 
