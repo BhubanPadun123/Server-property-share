@@ -22,6 +22,6 @@ CREATE TABLE feedback (
     email VARCHAR(255) NOT NULL UNIQUE,
     message VARCHAR(800) NOT NULL,
     rating VARCHAR(50) NOT NULL,
-    propertyId VARCHAR(400) NOT NULL
+    propertyId VARCHAR(400) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
