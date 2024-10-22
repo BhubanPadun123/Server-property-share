@@ -1,3 +1,4 @@
+require('dotenv').config(); // Load environment variables
 const express = require("express");
 const bodyParser = require("body-parser");
 const LOGGR = require('pino')();
@@ -5,9 +6,9 @@ const CLOG = LOGGR.child({ type: 'SERVER' });
 const routes = require("./routes");
 const userCtr = require("./controller/users");
 const { connectDB } = require("./utils/db_config");
-const session = require('express-session')
+const session = require('express-session');
 const cookieParser = require('cookie-parser');
-// const RedisStore = require("connect-redis").default
+// const RedisStore = require("connect-redis").default;
 // const redis = require("redis");
 // const redisClient = redis.createClient("6379", "127.0.0.1");
 
@@ -16,80 +17,56 @@ const cookieParser = require('cookie-parser');
 // let redisStore = new RedisStore({
 //     client: redisClient,
 //     prefix: "coffeecropcare:",
-// })
+// });
 
 const app = express();
-const PORT = 9000;
+const PORT = process.env.PORT || 9000; // Use PORT from environment or default to 9000
 
-app.set('view engine', 'pug')
+app.set('view engine', 'pug');
 
 // Middleware for parsing incoming request bodies
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-
 app.use(express.static('build'));
 app.use(cookieParser());
 
-// var sess = {
-//     store: redisStore,
-//     secret: 'somerandomstring7b563b8018b29d88450e1c18008edc6086cfb',
-//     resave: false,
-//     saveUninitialized: false,
-//     cookie: {
-//         secure: false, // This will only work if you have https enabled!
-//         maxAge: 60000 // 1 min
-//     }
-// }
+// Session configuration (production and development differences)
+let sess = {
+    secret: 'somerandomstring7b563b8018b29d88450e1c18008edc6086cfb',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: false, // Will change to true in production for HTTPS
+        maxAge: 60000 // 1 minute
+    }
+};
 
-if (app.get('env') === 'production') {
-    app.set('trust proxy', 1) // trust first proxy
-    //sess.cookie.secure = true // serve secure cookies
+// If in production, adjust session settings for HTTPS and secure cookies
+if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1); // Trust the first proxy
+    sess.cookie.secure = true; // Serve secure cookies over HTTPS
+    // Optionally, enable Redis for session storage in production
+    // sess.store = redisStore;
 }
-//app.use(session(sess));
 
-// const WHITE_LIST = [
-//     "/status",
-//     "/api/auth/signin",
-//     "/api/auth/register",
-//     "/api/auth/signout",
-//     "/api/price",
-// ];
+app.use(session(sess));
 
-app.use('/static', express.static('public'))
-// Middleware for request Authorization
-// app.use(function (req, res, next) {
+// Serve static files from public folder
+app.use('/static', express.static('public'));
 
-//     if (req.url.indexOf("/api/") == -1) {
-//         next();
-//         return;
-//     }
-    
-//     if(req.url.indexOf("/api/auth/signin") !== -1 && req.session.sessionid ){
-//         res.redirect("/api/auth/dashboard")
-//     }
+// Database connection
+connectDB();
 
-//     if (WHITE_LIST.indexOf(req.url) != -1) {
-//         next();
-//         return;
-//     }
-
-//     const sessionid = req.session.sessionid || "";
-//     if (!sessionid) {
-//         res.redirect("/api/auth/signin")
-//         return;
-//     } else {
-//         next()
-//     }
-// });
-connectDB()
-
+// Example route for rendering a Pug template
 app.get("/message", function (req, res) {
-    const { name, price } = req.query
-    res.render('message', { name, price })
-})
+    const { name, price } = req.query;
+    res.render('message', { name, price });
+});
 
+// Use your routes
 app.use('/', routes);
 
+// Start the server
 app.listen(PORT, () => {
-    CLOG.info(`WMS Listening on Port ${PORT}!`);
+    CLOG.info(`WMS Listening on Port ${PORT}! Running in ${process.env.NODE_ENV} mode.`);
 });
