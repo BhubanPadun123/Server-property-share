@@ -22,11 +22,9 @@ router.post('/login', function (req, res) {
     const reqBody = req.body || {};
     const userName = reqBody.email;
     const password = reqBody.password;
-    console.log(userName,"<===>",password)
-    // if (typeof userName !== "string" || typeof password != "string") {
-    //     res.status(400).json({ message: "Invalid userName or password", status: "BAD_REQUEST", statusCode: 400 });
-    //     return;
-    // }
+    if (typeof userName != "string" || typeof password != "string") {
+        return res.status(400).json({ message: "Invalid userName or password", status: "BAD_REQUEST", statusCode: 400 });
+    }
     userCtr.authenticateUser(userName, password).then(function (userInfo) {
         const sessionId = node_utils.createHash(userInfo.userName + Date.now() + "web");
         const to = userName;
@@ -36,7 +34,7 @@ router.post('/login', function (req, res) {
         let userData = {
             otp: otp
         }
-        let user = JSON.parse(userInfo.userid.userData)
+        let user = userInfo.userid.userData ? userInfo.userid.userData : null
         if (user && user.verify) {
             return res.status(200).json({
                 "message": "User login successfully",
