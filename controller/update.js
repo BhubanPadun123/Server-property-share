@@ -1,6 +1,9 @@
 const mysql = require('mysql');
 const { DB } = require("../utils/db_config");
 const {
+    JsonParse
+} = require("../utils/constant")
+const {
     useGetRow,
     useUpdateRow
 } = require("../hook/index")
@@ -8,8 +11,8 @@ const {
 const verifyOtp=(email,otp)=>{
     return new Promise(async(resolved,rejected)=> {
         useGetRow("users",email).then((res)=>{
-            let rowData = JSON.parse(res.data)[0]
-            let userData = JSON.parse(rowData.userData)
+            let rowData = JsonParse(res.data)
+            let userData = Array.isArray(rowData) && rowData.length > 0 ? rowData[0].userData : null
             if(userData){
                 if(otp == userData.otp){
                     userData.otp = ""
@@ -40,7 +43,8 @@ const updateUserData = (data, email) => {
         }
         useGetRow("users",email).then((result)=> {
             let userData = {}
-            let userMetaData = JSON.parse(result.data)[0].userData ? {...JSON.parse(JSON.parse(result.data)[0].userData)} : {}
+            let parseData = JsonParse(result.data)
+            let userMetaData = Array.isArray(parseData) && parseData[0].userData ? {...parseData[0].userData} : {}
             if(userMetaData){
                 userData = userMetaData
             }

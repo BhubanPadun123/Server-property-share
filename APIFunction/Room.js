@@ -8,7 +8,8 @@ const {
     useUpdateRow,
     useGetRoomByIds
 } = require("../hook/index")
-const {Mail}  = require("../controller/mail")
+const {Mail}  = require("../controller/mail");
+const { JsonParse } = require('../utils/constant');
 
 const router = express.Router();
 
@@ -51,37 +52,42 @@ router.post('/booking',async function(req,res){
     const reqBody = req.body
     const ownerEmail = reqBody.userName
     const customerData = reqBody.userid
-    const selectedRoom = reqBody.user_data
+    const selectedRoom = reqBody.userid.userData
     await useGetRowById("rooms",selectedRoom.bookingList[0]).then(async(response)=> {
-        let rowData = JSON.parse(response.data)[0]
+        let parseData = JsonParse(response.data)
+        let rowData = parseData && Array.isArray(parseData) ? parseData[0] : null
         let metaData = {}
+        
+        if(rowData && rowData.metaData){
+            metaData = {
+                ...rowData.metaData
+            }
+        }
  
-        if(rowData.metaData.booking_list){
+        if(metaData.booking_list){
             metaData['booking_list'] = [...metaData.booking_list,selectedRoom.bookingList[0]]
         }else{
             metaData['booking_list'] = [selectedRoom.bookingList[0]]
-        }
-        metaData = {
-            ...metaData,
-            ...JSON.parse(rowData.metaData)
         }
         await useUpdateRowById("rooms",selectedRoom.bookingList[0],JSON.stringify(metaData)).then(async(result)=>{
             await Mail(
                 ownerEmail,
                 "Room Booking Message",
-                `Hi ${ownerEmail} , Following details customer is looking your room. ${customerData.email}`
+                `Hi ${ownerEmail} , Following details customer is looking your Property. ${customerData.email}`
             ).then(()=>{
                 useGetRow("users",customerData.email).then((results)=>{
-                    const userRowData = JSON.parse(results.data)[0]
+                    let userParseData = JsonParse(results.data)
+                    const userRowData = userParseData && Array.isArray(userParseData) ? userParseData[0] : null
                     let userData = {}
-                    if(JSON.parse(userRowData.userData).hasOwnProperty('booking_list')){
-                        userData['booking_list'] = [...JSON.parse(userRowData.userData).booking_list,selectedRoom.bookingList[0]]
+                    if(userRowData && userRowData.userData){
+                        userData = {
+                            ...userRowData.userData
+                        }
+                    }
+                    if(userData.hasOwnProperty('booking_list')){
+                        userData['booking_list'] = [...userData.booking_list,selectedRoom.bookingList[0]]
                     }else{
                         userData['booking_list'] = [selectedRoom.bookingList[0]]
-                    }
-                    userData = {
-                        ...userData,
-                        ...JSON.parse(userRowData.userData)
                     }
                     useUpdateRow("users",customerData.email,JSON.stringify(userData)).then(async()=>{
                         await Mail(
@@ -93,9 +99,11 @@ router.post('/booking',async function(req,res){
                                 message:"Successfully booking the room"
                             })
                         }).catch((err)=> {
+                            console.log("error--->",err)
                             return res.status(500).json({err})
                         })
                     }).catch((err)=> {
+                        console.log("error--->",err)
                         return res.status(500).json({err})
                     })
                 }).catch((error)=> {
@@ -103,6 +111,7 @@ router.post('/booking',async function(req,res){
                     return res.status(500).json({error})
                 })
             }).catch((error)=> {
+                console.log("error--->",error)
                 return res.status(500).json({error})
             })
         }).catch((error)=>{
@@ -110,35 +119,34 @@ router.post('/booking',async function(req,res){
             return res.status(500).json({error})
         })
     }).catch((error)=> {
+        console.log("error--->",error)
         return res.status(500).json({error})
     })
 })
 
-router.post("/a1/room",async function(req,res){
+router.post("/a1/room",async function(req,res){ // review
     try {
         const reqBody = await req.body
         const roomId = reqBody.roomId
         const email = reqBody.email
-        console.log("req--->",reqBody)
         const review = {
             rating:reqBody.rating,
             comment:reqBody.comment,
             reviewer:reqBody.userName
         }
         await useGetRowById("rooms",roomId).then((response)=>{
-            let rowData = JSON.parse(response.data)[0]
-            console.log(JSON.parse(rowData.metaData).reviews,"<<<<<")
+            let parseData = JsonParse(response.data)
+            let rowData = parseData && Array.isArray(parseData) ? parseData[0] : null
             let metaData = {}
             
             if(rowData.metaData){
                 metaData = {
-                    ...JSON.parse(rowData.metaData)
+                    ...rowData.metaData
                 }
             }
 
             if(metaData && metaData.reviews){
                 if(Array.isArray(metaData.reviews)){
-                    console.log("call1")
                     let reviews = [...metaData.reviews,review]
                     metaData.reviews = reviews
                 }
@@ -156,9 +164,11 @@ router.post("/a1/room",async function(req,res){
                     })
                 })
             }).catch((err)=> {
+                console.log(err)
                 return res.status(500).json({err})
             })
         }).catch((err)=> {
+            console.log(err)
             return res.status(500).json({err})
         })
 
