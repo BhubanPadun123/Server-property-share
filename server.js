@@ -8,16 +8,6 @@ const userCtr = require("./controller/users");
 const { connectDB } = require("./utils/db_config");
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
-// const RedisStore = require("connect-redis").default;
-// const redis = require("redis");
-// const redisClient = redis.createClient("6379", "127.0.0.1");
-
-// redisClient.connect().catch(console.error)
-
-// let redisStore = new RedisStore({
-//     client: redisClient,
-//     prefix: "coffeecropcare:",
-// });
 
 const app = express();
 const PORT = process.env.PORT || 9000; // Use PORT from environment or default to 9000
@@ -68,5 +58,5 @@ app.use('/', routes);
 
 // Start the server
 app.listen(PORT, () => {
-    CLOG.info(`WMS Listening on Port ${PORT}! Running in ${process.env.NODE_ENV} mode.`);
+    CLOG.info(`http://localhost:${PORT}`);
 });

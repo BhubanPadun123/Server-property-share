@@ -128,7 +128,7 @@ const useGetRoomByIds = (roomIds) => {
     return new Promise(async (resolved, rejected) => {
         try {
             const query = 'SELECT * FROM rooms WHERE id IN (?)'
-            DB.query(query, [roomIds], function (err, results) {
+            DB.query(query, [...roomIds], function (err, results) {
                 if (err) {
                     rejected({ err })
                 } else {

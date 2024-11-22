@@ -41,7 +41,7 @@ const authenticateUser = function (userName, password) {
 				if (result) {
 					resolve({ "userName": userName, userid: userDetails.results[0] });
 				} else {
-					reject({ "message": `Password incorrect!!`, "statusCode": 404 })
+					reject({ "message": `Password incorrect!!`, "statusCode": 500 })
 				}
 			}).catch(e => {
 				reject({ "message": `Error ${e}`, "statusCode": 404 })
